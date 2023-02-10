@@ -88,7 +88,6 @@ def post_comment(request, post_id):
     print(form)
     if form.is_valid():
         comment = form.save(commit=False)
-        print(comment)
         comment.post = post
         print(comment)
         comment.save()
