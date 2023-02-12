@@ -11,8 +11,8 @@ from .forms import EmailPostForm, CommentForm
 
 class PostListView(ListView):
     queryset = Post.published.all()
-    context_object_name = 'posts'
-    paginate_by = 3
+    context_object_name = 'posts'  # Used for passing parameters to the modle
+    paginate_by = 3 
     template_name = 'blog/post/list.html'
 
 def post_list(request):
@@ -24,7 +24,7 @@ def post_list(request):
     except PageNotAnInteger:
         posts = paginator.page(1)
     except EmptyPage:
-        posts = paginator.page(paginator.num_pages)
+        posts = paginator.page(paginator.num_pages) # if the user inputs an exceeded number will use num_pages variable
     return render(request, 'blog/post/list.html', {'posts': posts})
 
 def post_detail(request, year, month, day, post):
@@ -62,6 +62,8 @@ def post_share(request, post_id):
             cd = form.cleaned_data
             post_url = request.build_absolute_uri(
                 post.get_absolute_url())
+            print(post.get_absolute_url())
+            print(request.build_absolute_uri(post.get_absolute_url()))
             subject = f"{cd['name']} recommends you read " \
                       f"{post.title}"
             message = f"Read {post.title} at {post_url}\n\n" \

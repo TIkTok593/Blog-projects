@@ -6,7 +6,7 @@ from django.urls import reverse
 
 class PublishManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(status=Post.Status.PUBLISHED)
+        return super().get_queryset().filter(status=Post.Status.PUBLISHED) # We manipulte the query set function of the Manager class
 
 
 class Post(models.Model):
