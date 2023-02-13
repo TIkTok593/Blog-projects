@@ -10,18 +10,20 @@ from taggit.models import Tag
 from .models import Post, Comment
 from .forms import EmailPostForm, CommentForm
 
+
 class PostListView(ListView):
     queryset = Post.published.all()
-    context_object_name = 'posts'  # Used for passing parameters to the modle
-    paginate_by = 3 
+    context_object_name = 'posts'  # Used for passing parameters to the model
+    paginate_by = 3
     template_name = 'blog/post/list.html'
+
 
 def post_list(request, tag_slug=None):
     post_list = Post.published.all()
     tag = None
     if tag_slug:
-        tag = get_object_or_404(Tag, tag=tag_slug)
-        post_list = post_list.filter(tag__in=[tag]) # here we put the tag in brackets because it's an array
+        tag = get_object_or_404(Tag, slug=tag_slug)  # Notice that slug will convert the word to lower case
+        post_list = post_list.filter(tag__in=[tag])  # here we put the tag in brackets because it's an array
 
     paginator = Paginator(post_list, 3)  # This post_list is for the variable That get the value from the model
     page_number = request.GET.get('page', 1)  # Get the value of the page if it has one, if not return 1
@@ -32,12 +34,13 @@ def post_list(request, tag_slug=None):
         posts = paginator.page(1)
     except EmptyPage:
         posts = paginator.page(paginator.num_pages)
-    return render(request, 
-    'blog/post/list.html', 
-    {
-        'posts': posts,
-        'tag': tag                
-    })
+    return render(request,
+                  'blog/post/list.html',
+                  {
+                      'posts': posts,
+                      'tag': tag
+                  })
+
 
 def post_detail(request, year, month, day, post):
     # try:
@@ -45,22 +48,25 @@ def post_detail(request, year, month, day, post):
     # except Post.DoesNotExist:
     #     raise Http404('No Post found.')
     # return render(request, 'blog/post/detail.html', {'post': post})
-    post = get_object_or_404(Post, 
-                            slug=post,
-                            publish__year=year,
-                            publish__month=month,
-                            publish__day = day,
-                            status=Post.Status.PUBLISHED)
-    
-    comments = post.comments.filter(active=True) # we can use comments, because we defined the related_name in Comments's Model
+    post = get_object_or_404(Post,
+                             slug=post,
+                             publish__year=year,
+                             publish__month=month,
+                             publish__day=day,
+                             status=Post.Status.PUBLISHED)
+
+    comments = post.comments.filter(
+        active=True)  # we can use comments, because we defined the related_name in Comments's Model
     form = CommentForm()
     return render(request,
-     'blog/post/detail.html',
-      {'post': post,
-       'comments': comments,
-       'form': form
-       }
-    )
+                  'blog/post/detail.html',
+                  {
+                      'post': post,
+                      'comments': comments,
+                      'form': form
+                  }
+                  )
+
 
 def post_share(request, post_id):
     # Retrieve post by id
@@ -79,7 +85,7 @@ def post_share(request, post_id):
             subject = f"{cd['name']} recommends you read " \
                       f"{post.title}"
             message = f"Read {post.title} at {post_url}\n\n" \
-                f"{cd['name']}\'s comments: {cd['comments']}"
+                      f"{cd['name']}\'s comments: {cd['comments']}"
             send_mail(subject, message, 'abuyahyadiab@gmail.com',
                       [cd['to']])
             sent = True
@@ -90,15 +96,20 @@ def post_share(request, post_id):
     return render(request, 'blog/post/share.html', {'post': post,
                                                     'form': form, 'sent': sent})
 
+
 @require_POST
 def post_comment(request, post_id):
     # here the user has been posted a comment to a specific post
     # I'll try to fetch this post, if not exist, an error will be generated
-    # If it exist, we will assign this post to a field on that comment's object
-    post = get_object_or_404(Post, id=post_id, status=Post.Status.PUBLISHED) # you have to assure that this is a published post not a draft one.
+    # If it exists, we will assign this post to a field on that comment's object
+    post = get_object_or_404(Post, id=post_id,
+                             status=Post.Status.PUBLISHED)  # you have to assure that this is a published post not a
+    # draft one.
     comment = None
     print(request.POST)
-    form = CommentForm(request.POST) # by using request.POST, we get the form object that has been submitted, and we pass it to comment form to check it's validation
+    form = CommentForm(
+        request.POST)  # by using request.POST, we get the form object that has been submitted, and we pass it to
+    # comment form to check it's validated
     print(form)
     if form.is_valid():
         comment = form.save(commit=False)
