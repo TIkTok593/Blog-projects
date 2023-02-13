@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
+from taggit.models import Tag
 # from django.http import Http404
 
 
@@ -15,17 +16,28 @@ class PostListView(ListView):
     paginate_by = 3 
     template_name = 'blog/post/list.html'
 
-def post_list(request):
+def post_list(request, tag_slug=None):
     post_list = Post.published.all()
+    tag = None
+    if tag_slug:
+        tag = get_object_or_404(Tag, tag=tag_slug)
+        post_list = post_list.filter(tag__in=[tag]) # here we put the tag in brackets because it's an array
+
     paginator = Paginator(post_list, 3)  # This post_list is for the variable That get the value from the model
     page_number = request.GET.get('page', 1)  # Get the value of the page if it has one, if not return 1
     try:
         posts = paginator.page(page_number)
+
     except PageNotAnInteger:
         posts = paginator.page(1)
     except EmptyPage:
-        posts = paginator.page(paginator.num_pages) # if the user inputs an exceeded number will use num_pages variable
-    return render(request, 'blog/post/list.html', {'posts': posts})
+        posts = paginator.page(paginator.num_pages)
+    return render(request, 
+    'blog/post/list.html', 
+    {
+        'posts': posts,
+        'tag': tag                
+    })
 
 def post_detail(request, year, month, day, post):
     # try:
