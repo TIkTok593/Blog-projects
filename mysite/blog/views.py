@@ -21,6 +21,7 @@ def post_list(request):
     page_number = request.GET.get('page', 1)  # Get the value of the page if it has one, if not return 1
     try:
         posts = paginator.page(page_number)
+
     except PageNotAnInteger:
         posts = paginator.page(1)
     except EmptyPage:
