@@ -3,7 +3,10 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
+from django.db.models import Count
+
 from taggit.models import Tag
+
 # from django.http import Http404
 
 
@@ -58,12 +61,21 @@ def post_detail(request, year, month, day, post):
     comments = post.comments.filter(
         active=True)  # we can use comments, because we defined the related_name in Comments's Model
     form = CommentForm()
+
+    post_tags = post.tag.values_list('id', flat=True)  # This will return you a list of tags' ids and flat to return
+    # it in a list of ids not list of characters
+    similar_posts = Post.published.filter(tag__in=post_tags).exclude(id=post.id)
+    similar_posts = similar_posts.annotate(same_tags=Count('tag'))\
+                                 .order_by('-same_tags', '-publish')[:4]  # this will generate a field called same_tags
+    # This field will be in each on of the similar posts, we will order them by this field firstly.
+
     return render(request,
                   'blog/post/detail.html',
                   {
                       'post': post,
                       'comments': comments,
-                      'form': form
+                      'form': form,
+                      'similar_posts': similar_posts
                   }
                   )
 
