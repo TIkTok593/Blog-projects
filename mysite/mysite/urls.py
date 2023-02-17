@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.sitemaps.views import sitemap
-from blog.sitemaps import PostSitemap
+from blog.sitemaps import PostSitemap  # it gives me an error, but it will work
 
 
 sitemaps = {
