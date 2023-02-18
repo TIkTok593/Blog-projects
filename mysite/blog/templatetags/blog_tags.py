@@ -6,10 +6,6 @@ import markdown
 
 register = template.Library()
 
-@register.filter(name='markdown')  # this name will be used in the templates for filtering
-def markdown_format(text):
-    return mark_safe(markdown.markdown(text))
-
 
 @register.simple_tag
 def get_most_commented_posts(count=5):
@@ -31,3 +27,9 @@ def show_latest_posts(count=5):
 # def show_latest_posts(count=5):
 #     latest_posts = Post.published.order_by('-publish')[:count]
 #     return latest_posts
+
+
+#this is a filter
+@register.filter(name='markdown')  # this name will be used in the templates for filtering
+def markdown_format(text):
+    return mark_safe(markdown.markdown(text))
