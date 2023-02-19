@@ -66,7 +66,7 @@ def post_detail(request, year, month, day, post):
     form = CommentForm()
 
     post_tags = post.tag.values_list('id', flat=True)  # This will return you a list of tags' ids and flat to return
-    # it in a list of ids not list of characters
+    # it in a list of ids not list of tuples
     similar_posts = Post.published.filter(tag__in=post_tags).exclude(id=post.id)
     similar_posts = similar_posts.annotate(same_tags=Count('tag')) \
                         .order_by('-same_tags', '-publish')[:4]  # this will generate a field called same_tags
