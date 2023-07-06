@@ -1,9 +1,14 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from taggit.managers import TaggableManager
+
+
+user_model = get_user_model()
+
 
 class PublishManager(models.Manager):
     def get_queryset(self):

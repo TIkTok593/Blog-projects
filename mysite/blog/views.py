@@ -1,14 +1,18 @@
-from django.shortcuts import render, get_object_or_404
+from typing import Any
+from django.forms.models import BaseModelForm
+from django.shortcuts import render, get_object_or_404, reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.views.generic import ListView
+from django.views.generic import ListView, CreateView 
+from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.http import HttpRequest, HttpResponse
+from django.utils.text import slugify
+
 from taggit.models import Tag
-# from django.http import Http404
-
-
 from .models import Post, Comment
-from .forms import EmailPostForm, CommentForm
+from .forms import EmailPostForm, CommentForm, PostForm, UserRegistrationForm
 
 class PostListView(ListView):
     queryset = Post.published.all()
@@ -39,6 +43,29 @@ def post_list(request, tag_slug=None):
         'tag': tag                
     })
 
+
+@login_required
+def post_create(request):
+    pass
+
+
+@method_decorator(login_required, name='dispatch')
+class PostCreateView(CreateView):
+    form_class = PostForm
+    template_name = 'blog/post/post_create.html'
+
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        title = form.cleaned_data['title']
+        slug = slugify(title)
+        form.instance.slug = slug
+        return super().form_valid(form)
+    
+    def get_success_url(self) -> str:
+        return reverse('blog:post_list')
+
+
+
+@login_required
 def post_detail(request, year, month, day, post):
     # try:
     #     post = Post.published.get(id=id)
@@ -105,3 +132,21 @@ def post_comment(request, post_id):
         print(comment)
         comment.save()
     return render(request, 'blog/post/comment.html', {'post': post, 'form': form, 'comment': comment})
+
+
+def user_register(request):
+    if request.method == 'POST':
+        user_form = UserRegistrationForm(request.POST)
+        if user_form.is_valid():
+            new_user = user_form.save(commit=False)  # don't save the user now, because we want to add on it.
+            new_user.set_password(  # this method is for hashing passwords rather than put it in a plain text.
+                user_form.cleaned_data['password1']
+            )
+            new_user.save()
+            return render(request, 'blog/register_done.html', {'user_form': user_form})
+    else:
+        user_form = UserRegistrationForm()
+    return render(request,
+                  'blog/register.html',
+                  {'user_form': user_form}
+                  )
